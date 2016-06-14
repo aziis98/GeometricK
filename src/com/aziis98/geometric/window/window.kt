@@ -13,7 +13,8 @@ abstract class Window : Canvas() {
     init {
         initWindow()
 
-        jframe.add(this)
+        jframe.contentPane.add(this)
+        jframe.pack()
 
         jframe.defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
         jframe.setLocationRelativeTo(null)
@@ -22,9 +23,14 @@ abstract class Window : Canvas() {
         thread { applicationLoop() }
     }
 
+    fun start() {
+
+    }
+
     // Abstract Methods
 
     abstract fun initWindow()
+    abstract fun init()
     abstract fun paint(g: Graphics2D)
     abstract fun update()
 

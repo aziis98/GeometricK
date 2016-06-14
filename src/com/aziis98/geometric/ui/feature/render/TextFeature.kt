@@ -11,7 +11,7 @@ import java.awt.Graphics2D
 class TextFeature(owner: Box, var text: String) : RenderFeature(owner) {
 
     override fun render(g: Graphics2D) {
-        g.drawStringCentered(text, owner.width / 2, owner.height / 2)
+        g.drawStringCentered(text, owner.width.toInt() / 2, owner.height.toInt() / 2)
     }
 
 }

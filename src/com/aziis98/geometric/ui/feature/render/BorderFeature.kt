@@ -11,7 +11,7 @@ class BorderFeature(owner: Box, var color: Color) : RenderFeature(owner) {
 
     override fun render(g: Graphics2D) {
         g.color = color
-        g.drawRect(0, 0, owner.width, owner.height)
+        g.drawRect(0, 0, owner.width.toInt(), owner.height.toInt())
     }
 
 }

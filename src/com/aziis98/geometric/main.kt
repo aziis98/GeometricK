@@ -7,25 +7,28 @@ import com.aziis98.geometric.util.tryRender
 import com.aziis98.geometric.window.*
 import com.aziis98.geometric.window.Window
 import java.awt.*
-import kotlin.properties.Delegates.notNull
+import kotlin.system.exitProcess
 
 // Copyright 2016 Antonio De Lucreziis
 
-fun main(args: Array<String>) { Geometric }
+fun main(args: Array<String>) { Geometric.start() }
 
 object Geometric : Window() {
 
-    var ui: WindowUI by notNull()
+    val ui: WindowUI by lazy { WindowUI(this) }
 
     override fun initWindow() {
-        size = size(1000, 900)
+        size = size(1000, 800)
         title = "Geometric"
         resizeable = true
+    }
 
-        ui = WindowUI(this)
-
+    override fun init() {
         ui.apply {
-            children += Box(this, left = 100, right = 100, top = 100, bottom = 100).apply {
+            features += BorderFeature(this, Color.GREEN)
+            features += RenderChildrenFeature(this)
+
+            children += Box(this, left = 100.pk, right = 100.pk, top = 100.pk, bottom = 100.pk).apply {
                 features += BorderFeature(this, Color.GREEN)
                 features += RenderChildrenFeature(this)
             }
@@ -36,14 +39,13 @@ object Geometric : Window() {
         g.background = Color.WHITE
         g.clearRect(0, 0, width, height)
 
-        g.color = Color.RED
-        g.drawRect(300, 300, (100 + 50 * Math.sin(totalUpdates / 15.0)).toInt(), 100)
-
         ui.tryRender(g)
+
+        exitProcess(-1)
     }
 
     override fun update() {
-
+        ui.updateLayout()
     }
 
 }

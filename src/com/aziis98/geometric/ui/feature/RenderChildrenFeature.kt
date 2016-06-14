@@ -9,12 +9,12 @@ import java.awt.Graphics2D
 
 class RenderChildrenFeature(owner: Box) : RenderFeature(owner) {
     override fun render(g: Graphics2D) {
-        g.translate(owner.left, owner.right)
+        g.translate(owner.left.value, owner.right.value)
 
         owner.children.forEach {
             it.tryRender(g)
         }
 
-        g.translate(-owner.left, -owner.right)
+        g.translate(-owner.left.value, -owner.right.value)
     }
 }
