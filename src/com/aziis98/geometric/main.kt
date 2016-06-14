@@ -7,7 +7,6 @@ import com.aziis98.geometric.util.tryRender
 import com.aziis98.geometric.window.*
 import com.aziis98.geometric.window.Window
 import java.awt.*
-import kotlin.system.exitProcess
 
 // Copyright 2016 Antonio De Lucreziis
 
@@ -25,7 +24,7 @@ object Geometric : Window() {
 
     override fun init() {
         ui.apply {
-            features += BorderFeature(this, Color.GREEN)
+            features += BorderFeature(this, Color.BLUE)
             features += RenderChildrenFeature(this)
 
             children += Box(this, left = 100.pk, right = 100.pk, top = 100.pk, bottom = 100.pk).apply {
@@ -33,6 +32,10 @@ object Geometric : Window() {
                 features += RenderChildrenFeature(this)
             }
         }
+
+        ui.updateLayout()
+
+        println(ui.toString())
     }
 
     override fun paint(g: Graphics2D) {
@@ -40,8 +43,6 @@ object Geometric : Window() {
         g.clearRect(0, 0, width, height)
 
         ui.tryRender(g)
-
-        exitProcess(-1)
     }
 
     override fun update() {

@@ -24,7 +24,7 @@ abstract class Window : Canvas() {
     }
 
     fun start() {
-
+        init()
     }
 
     // Abstract Methods

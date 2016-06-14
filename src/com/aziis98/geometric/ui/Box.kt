@@ -10,8 +10,11 @@ interface ISized {
     val height: PackedInt
 }
 
-val ABSENT = PackedInt(0, false)
-val ZERO = PackedInt(0, true)
+val ABSENT:PackedInt
+    get() = PackedInt(0, false)
+
+val ZERO: PackedInt
+    get() = PackedInt(0, true)
 
 open class Box(val container: ISized,
                var left: PackedInt = ABSENT, var right: PackedInt = ABSENT, var top: PackedInt = ABSENT, var bottom: PackedInt = ABSENT,
@@ -38,14 +41,21 @@ open class Box(val container: ISized,
     val children = ArrayList<Box>()
 
     inline fun <reified F> featuresOfType(): Collection<F> {
-        println("Retriving feature of type: ${F::class.simpleName}")
-        return features.apply { println(this) }.filterIsInstance<F>().apply { println(this) }
+        // println("Retriving feature of type: ${F::class.simpleName}")
+        return features /* .apply { println(this) } */ .filterIsInstance<F>() // .apply { println(this) }
     }
 
     companion object {
 
         fun fillContainer(container: Box) = Box(container, ZERO, ZERO, ZERO, ZERO)
 
+    }
+
+    override fun toString(): String {
+        return """Box(left = $left, right = $right, top = $top, bottom = $bottom, width = $width, height = $height) [
+        |   ${ if (children.isEmpty()) "" else children.map { it.toString() + "\n|" }.reduce { a, b -> a + b }}
+        |]
+        """.trimMargin()
     }
 
 }
@@ -55,6 +65,8 @@ class PackedInt(var value: Int, val present: Boolean) {
     fun isPresent() = present
 
     fun toInt() = value
+
+    override fun toString() = "${if (present) "V" else "X"}$value"
 }
 
 val Int.pk: PackedInt
