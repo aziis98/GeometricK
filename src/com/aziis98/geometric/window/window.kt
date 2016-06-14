@@ -135,14 +135,15 @@ abstract class Window : Canvas() {
         set(value) { jframe.isResizable = value }
 
     var size: WindowSize
-        get() = WindowSize(jframe.width, jframe.height)
+        get() = WindowSize(width, height)
         set(value) {
-            jframe.setSize(
+            setSize(
                 if (value.width  < 0) width  else value.width,
                 if (value.height < 0) height else value.height
             )
         }
 
+    /*
     override fun getWidth() = jframe.width
 
     override fun getHeight() = jframe.height
@@ -154,6 +155,7 @@ abstract class Window : Canvas() {
     fun setHeight(value: Int) {
         jframe.setSize(width, value)
     }
+    */
 
 }
 
