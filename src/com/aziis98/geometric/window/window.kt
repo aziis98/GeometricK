@@ -31,7 +31,7 @@ abstract class Window : Canvas() {
 
     abstract fun initWindow()
     abstract fun init()
-    abstract fun paint(g: Graphics2D)
+    abstract fun render(g: Graphics2D)
     abstract fun update()
 
     // Rendering
@@ -61,7 +61,8 @@ abstract class Window : Canvas() {
     var totalUpdates = 0
 
     fun applicationLoop() {
-        System.setProperty("sun.awt.noerasebackground", "true");
+        System.setProperty("sun.awt.noerasebackground", "true")
+        createBufferStrategy(3)
 
         while (jframe.isVisible) {
 
@@ -84,7 +85,7 @@ abstract class Window : Canvas() {
 
             //Render. To do so, we need to calculate interpolation for a smooth render.
             interpolation = Math.min(1.0, ((now - lastUpdateTime) / timeBetweenUpdates).toDouble())
-            render()
+            renderInternal()
             lastRenderTime = now
 
             //Update the frames we got.
@@ -114,22 +115,30 @@ abstract class Window : Canvas() {
         }
     }
 
-    internal fun render() {
-        val bs = bufferStrategy
-        if (bs == null || freshBuffer) {
-            createBufferStrategy(3)
-            freshBuffer = false
-            return
-        }
+    internal fun renderInternal() {
+//        val bs = bufferStrategy
+//        if (bs == null || freshBuffer) {
+//            createBufferStrategy(3)
+//            freshBuffer = false
+//            return
+//        }
 
-        val g = bs.drawGraphics as Graphics2D
+        // val g = bs.drawGraphics as Graphics2D
 
-        paint(g)
+        repaint()
 
-        g.dispose()
-        bs.show()
+        // g.dispose()
+        // bs.show()
 
         frameCount++
+    }
+
+    override fun update(g: Graphics) {
+        paint(g)
+    }
+
+    override fun paint(g: Graphics) {
+        this.render(g as Graphics2D)
     }
 
     // Binding properties

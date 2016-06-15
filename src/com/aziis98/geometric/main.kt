@@ -24,21 +24,21 @@ object Geometric : Window() {
 
     override fun init() {
         ui.apply {
-            features += renderBorder(Color.BLUE)
+            // features += renderBorder(Color.BLUE)
             features += renderChildren()
 
-            val box1 = box(left = 100.pk, right = 100.pk, top = 0.pk, height = 100.pk).apply {
-                features += renderBorder(Color.GREEN)
+            val box1 = box(left = 100.pk, right = 100.pk, top = 10.pk, height = 100.pk).apply {
+                features += renderBorder(Color.WHITE)
                 features += renderChildren()
             } addTo children
 
-            box(left = 200.pk, right = 200.pk, height = 75.pk).apply {
+            box(left = 200.pk, right = 200.pk, height = 27.pk).apply {
                 features += layoutConstraint {
                     top = (box1.top + box1.height + 10).pk
                 }
-                features += renderBorder(Color.ORANGE)
+                // features += renderBorder(Color.ORANGE)
                 features += renderChildren()
-                features += RenderNinePatchFeature(this, TextureLoader.ninePatch("/ui/nine-patch-test.png"))
+                features += RenderNinePatchFeature(this, TextureLoader.ninePatch("/ui/toolbar.png"))
             } addTo children
         }
 
@@ -47,8 +47,8 @@ object Geometric : Window() {
         println(ui.toString())
     }
 
-    override fun paint(g: Graphics2D) {
-        g.background = Color.WHITE
+    override fun render(g: Graphics2D) {
+        g.background = Color(0x333333)
         g.clearRect(0, 0, width, height)
 
         ui.tryRender(g)
