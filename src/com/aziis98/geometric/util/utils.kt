@@ -10,6 +10,11 @@ operator fun <E> MutableCollection<E>.plusAssign(element: E) {
     this.add(element)
 }
 
+infix fun <E> E.addTo(collection: MutableCollection<E>): E {
+    collection.add(this)
+    return this
+}
+
 fun Graphics2D.drawStringCentered(string: String, x: Int, y: Int) {
     val bounds = fontMetrics.getStringBounds(string, this)
     drawString(string, (x - bounds.width / 2).toInt(), y - (bounds.height / 2).toInt())

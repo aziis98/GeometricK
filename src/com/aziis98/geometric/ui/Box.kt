@@ -1,6 +1,6 @@
 package com.aziis98.geometric.ui
 
-import com.aziis98.geometric.ui.feature.Feature
+import com.aziis98.geometric.ui.feature.*
 import java.util.*
 
 // Copyright 2016 Antonio De Lucreziis
@@ -10,17 +10,34 @@ interface ISized {
     val height: PackedInt
 }
 
+fun Box.box(left: PackedInt = ABSENT,
+        right: PackedInt = ABSENT,
+        top: PackedInt = ABSENT,
+        bottom: PackedInt = ABSENT,
+        width: PackedInt = ABSENT,
+        height: PackedInt = ABSENT,
+        id: String = NO_ID) = Box(this, left, right, top, bottom, width, height, id)
+
 val ABSENT:PackedInt
     get() = PackedInt(0, false)
 
 val ZERO: PackedInt
     get() = PackedInt(0, true)
 
+const val NO_ID = "__noId__"
+
 open class Box(val container: ISized,
-               var left: PackedInt = ABSENT, var right: PackedInt = ABSENT, var top: PackedInt = ABSENT, var bottom: PackedInt = ABSENT,
-               override var width: PackedInt = ABSENT, override var height: PackedInt = ABSENT) : ISized {
+               var left:   PackedInt = ABSENT,
+               var right:  PackedInt = ABSENT,
+               var top:    PackedInt = ABSENT,
+               var bottom: PackedInt = ABSENT,
+               override var width:  PackedInt = ABSENT,
+               override var height: PackedInt = ABSENT,
+               val id: String = NO_ID) : ISized {
 
     fun updateLayout() {
+
+        featuresOfType<LayoutConstraintFeature>().forEach(LayoutConstraintFeature::updateConstraint)
 
         when {
             left.isAbsent() -> left.value = container.width - right - width
@@ -53,7 +70,7 @@ open class Box(val container: ISized,
 
     override fun toString(): String {
         return """Box(left = $left, right = $right, top = $top, bottom = $bottom, width = $width, height = $height) [
-        |   ${ if (children.isEmpty()) "" else children.map { it.toString() + "\n|" }.reduce { a, b -> a + b }}
+        |   ${ if (children.isEmpty()) "" else children.map { "\t" + it.toString() + "\n" }.reduce { a, b -> a + b }}
         |]
         """.trimMargin()
     }

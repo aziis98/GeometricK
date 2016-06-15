@@ -7,7 +7,7 @@ import java.awt.*
 
 // Copyright 2016 Antonio De Lucreziis
 
-class BorderFeature(owner: Box, var color: Color) : RenderFeature(owner) {
+class RenderBorderFeature(owner: Box, var color: Color) : RenderFeature(owner) {
 
     override fun render(g: Graphics2D) {
         g.color = color
@@ -15,3 +15,5 @@ class BorderFeature(owner: Box, var color: Color) : RenderFeature(owner) {
     }
 
 }
+
+fun Box.renderBorder(color: Color) = RenderBorderFeature(this, color)

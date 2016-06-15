@@ -61,6 +61,8 @@ abstract class Window : Canvas() {
     var totalUpdates = 0
 
     fun applicationLoop() {
+        System.setProperty("sun.awt.noerasebackground", "true");
+
         while (jframe.isVisible) {
 
             var now = System.nanoTime()

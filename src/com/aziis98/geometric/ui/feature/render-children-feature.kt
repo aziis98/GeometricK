@@ -11,10 +11,12 @@ class RenderChildrenFeature(owner: Box) : RenderFeature(owner) {
     override fun render(g: Graphics2D) {
 
         owner.children.forEach {
-            g.translate(it.left.value, it.right.value)
+            g.translate(it.left.value, it.top.value)
             it.tryRender(g)
-            g.translate(-it.left.value, -it.right.value)
+            g.translate(-it.left.value, -it.top.value)
         }
 
     }
 }
+
+fun Box.renderChildren() = RenderChildrenFeature(this)

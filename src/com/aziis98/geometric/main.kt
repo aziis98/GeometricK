@@ -1,9 +1,9 @@
 package com.aziis98.geometric
 
 import com.aziis98.geometric.ui.*
-import com.aziis98.geometric.ui.feature.RenderChildrenFeature
-import com.aziis98.geometric.ui.feature.render.BorderFeature
-import com.aziis98.geometric.util.tryRender
+import com.aziis98.geometric.ui.feature.*
+import com.aziis98.geometric.ui.feature.render.renderBorder
+import com.aziis98.geometric.util.*
 import com.aziis98.geometric.window.*
 import com.aziis98.geometric.window.Window
 import java.awt.*
@@ -24,13 +24,21 @@ object Geometric : Window() {
 
     override fun init() {
         ui.apply {
-            features += BorderFeature(this, Color.BLUE)
-            features += RenderChildrenFeature(this)
+            features += renderBorder(Color.BLUE)
+            features += renderChildren()
 
-            children += Box(this, left = 100.pk, right = 100.pk, top = 100.pk, bottom = 100.pk).apply {
-                features += BorderFeature(this, Color.GREEN)
-                features += RenderChildrenFeature(this)
-            }
+            val box1 = box(left = 100.pk, right = 100.pk, top = 0.pk, height = 100.pk).apply {
+                features += renderBorder(Color.GREEN)
+                features += renderChildren()
+            } addTo children
+
+            box(left = 200.pk, right = 200.pk, height = 75.pk).apply {
+                features += layoutConstraint {
+                    top = (box1.top + box1.height + 10).pk
+                }
+                features += renderBorder(Color.ORANGE)
+                features += renderChildren()
+            } addTo children
         }
 
         ui.updateLayout()
