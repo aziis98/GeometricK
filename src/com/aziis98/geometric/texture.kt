@@ -59,6 +59,13 @@ fun Graphics2D.drawNinePatchTexture(ninePatch: NinePatch, x: Int, y: Int, width:
         drawImage(patchTopCenter, x + left, y, width - left - right, top, null)
         drawImage(patchTopRight, x + width - right, y, right, top, null)
 
+        drawImage(patchCenterLeft, x, y + top, left, height - top - bottom, null)
+        drawImage(patchCenterCenter, x + left, y + top, width - left - right, height - top - bottom, null)
+        drawImage(patchCenterRight, x + width - right, y + top, right, height - top - bottom, null)
+
+        drawImage(patchBottomLeft, x, y + height - bottom, left, bottom, null)
+        drawImage(patchBottomCenter, x + left, y + height - bottom, width - left - right, bottom, null)
+        drawImage(patchBottomRight, x + width - right, y + height - bottom, right, bottom, null)
         // @formatter:on
 
     }

@@ -2,7 +2,7 @@ package com.aziis98.geometric
 
 import com.aziis98.geometric.ui.*
 import com.aziis98.geometric.ui.feature.*
-import com.aziis98.geometric.ui.feature.render.renderBorder
+import com.aziis98.geometric.ui.feature.render.*
 import com.aziis98.geometric.util.*
 import com.aziis98.geometric.window.*
 import com.aziis98.geometric.window.Window
@@ -38,6 +38,7 @@ object Geometric : Window() {
                 }
                 features += renderBorder(Color.ORANGE)
                 features += renderChildren()
+                features += RenderNinePatchFeature(this, TextureLoader.ninePatch("/ui/nine-patch-test.png"))
             } addTo children
         }
 
