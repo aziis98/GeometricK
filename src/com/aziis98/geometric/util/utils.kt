@@ -3,6 +3,7 @@ package com.aziis98.geometric.util
 import com.aziis98.geometric.ui.Box
 import com.aziis98.geometric.ui.feature.RenderFeature
 import java.awt.Graphics2D
+import kotlin.concurrent.thread
 
 // Copyright 2016 Antonio De Lucreziis
 
@@ -23,4 +24,18 @@ fun Graphics2D.drawStringCentered(string: String, x: Int, y: Int) {
 fun Box.tryRender(g: Graphics2D) {
     featuresOfType<RenderFeature>()
         .forEach { it.render(g) }
+}
+
+fun runLater(delay: Long, action: () -> Unit): () -> Unit {
+    var cancelled = false
+
+    thread {
+        Thread.sleep(delay)
+
+        if (!cancelled) action()
+    }
+
+    return {
+        cancelled = true
+    }
 }

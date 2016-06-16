@@ -1,24 +1,38 @@
 package com.aziis98.geometric.window
 
 import java.awt.*
+import java.awt.event.*
+import java.awt.image.BufferedImage
 import javax.swing.*
 import kotlin.concurrent.thread
 
 // Copyright 2016 Antonio De Lucreziis
 
-abstract class Window : Canvas() {
-
-    val jframe: JFrame = JFrame()
+abstract class Window : JFrame() {
 
     init {
         initWindow()
 
-        jframe.contentPane.add(this)
-        jframe.pack()
+        addComponentListener(object : ComponentAdapter() {
+            override fun componentResized(e: ComponentEvent) {
+                // cancelPause()
+                // pauseRendering = true
 
-        jframe.defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
-        jframe.setLocationRelativeTo(null)
-        jframe.isVisible = true
+                buffer = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+
+                // renderInternal()
+            }
+        })
+
+        defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
+        setLocationRelativeTo(null)
+        isVisible = true
+
+        background = Color.BLACK
+        contentPane.background = Color(0, 0, 0, 0)
+
+        System.setProperty("sun.awt.noerasebackground", "true")
+        // createBufferStrategy(3)
 
         thread { applicationLoop() }
     }
@@ -53,18 +67,13 @@ abstract class Window : Canvas() {
     internal var lastSecondTime = (lastUpdateTime / 1000000000).toInt()
 
     var maxUpdatesBeforeRender = 5
-
     var showFPS = true
-
-    var freshBuffer = false
-
+    // var pauseRendering = false
     var totalUpdates = 0
 
     fun applicationLoop() {
-        System.setProperty("sun.awt.noerasebackground", "true")
-        createBufferStrategy(3)
 
-        while (jframe.isVisible) {
+        while (isVisible) {
 
             var now = System.nanoTime()
             var updateCount = 0
@@ -115,64 +124,42 @@ abstract class Window : Canvas() {
         }
     }
 
+    internal var buffer: BufferedImage? = null
+
     internal fun renderInternal() {
-//        val bs = bufferStrategy
-//        if (bs == null || freshBuffer) {
-//            createBufferStrategy(3)
-//            freshBuffer = false
-//            return
-//        }
 
-        // val g = bs.drawGraphics as Graphics2D
+        if (buffer == null) {
+            buffer = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+        }
 
-        repaint()
-
-        // g.dispose()
-        // bs.show()
+        render(buffer?.graphics as Graphics2D)
+        graphics.drawImage(buffer, 0, 0, null)
 
         frameCount++
     }
 
-    override fun update(g: Graphics) {
-        paint(g)
-    }
-
-    override fun paint(g: Graphics) {
-        this.render(g as Graphics2D)
-    }
-
     // Binding properties
 
-    var title: String
-        get() = jframe.title
-        set(value) { jframe.title = value }
-
     var resizeable: Boolean
-        get() = jframe.isResizable
-        set(value) { jframe.isResizable = value }
+        get() = isResizable
+        set(value) {
+            isResizable = value
+        }
 
     var size: WindowSize
         get() = WindowSize(width, height)
         set(value) {
             setSize(
-                if (value.width  < 0) width  else value.width,
+                if (value.width < 0) width else value.width,
                 if (value.height < 0) height else value.height
             )
         }
 
-    /*
-    override fun getWidth() = jframe.width
+    // FIX FOR RESIZE FLICKERING //
 
-    override fun getHeight() = jframe.height
+    override fun update(g: Graphics) { }
 
-    fun setWidth(value: Int) {
-        jframe.setSize(value, height)
-    }
-
-    fun setHeight(value: Int) {
-        jframe.setSize(width, value)
-    }
-    */
+    override fun paint(g: Graphics?) { }
 
 }
 
