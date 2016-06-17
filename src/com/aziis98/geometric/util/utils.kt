@@ -111,7 +111,7 @@ fun Graphics2D.drawCircle(x: Int, y: Int, radius: Int) {
 }
 
 fun Graphics2D.fillCircle(x: Int, y: Int, radius: Int) {
-    fillOval(x - radius, y - radius, radius * 2, radius * 2)
+    fillOval(x - radius, y - radius, radius * 2 + 1, radius * 2 + 1)
 }
 
 //

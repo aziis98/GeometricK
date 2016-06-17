@@ -1,15 +1,19 @@
 package com.aziis98.geometric
 
+import com.aziis98.deluengine.io.Mouse
 import com.aziis98.deluengine.maths.Vec2i
+import com.aziis98.geometric.event.GeometricEvents
+import com.aziis98.geometric.renderer.Renderer
 import com.aziis98.geometric.ui.*
 import com.aziis98.geometric.ui.feature.*
-import com.aziis98.geometric.ui.feature.input.inputHover
+import com.aziis98.geometric.ui.feature.input.*
 import com.aziis98.geometric.ui.feature.render.*
 import com.aziis98.geometric.ui.feature.render.RenderTextureFeature.TextureRenderMode
 import com.aziis98.geometric.util.*
 import com.aziis98.geometric.window.*
 import com.aziis98.geometric.window.Window
 import java.awt.*
+import kotlin.properties.Delegates
 
 // Copyright 2016 Antonio De Lucreziis
 
@@ -17,7 +21,7 @@ fun main(args: Array<String>) {
     Geometric.start()
 }
 
-val COLOR_BACKGROUND = Color(0xEEEEEE)
+val COLOR_BACKGROUND = Color(0xFFFFFF)
 val COLOR_TOOLBAR_LABEL = Color(0x888888)
 val COLOR_TOOLBAR_LABEL_HOVER = Color(0x000000)
 
@@ -26,6 +30,7 @@ val TEXTURE_TOOLBAR = TextureLoader.ninePatch("/ui/light-toolbar.png")
 object Geometric : Window() {
 
     val ui: WindowUI by lazy { WindowUI(this) }
+    var renderer: Renderer by Delegates.notNull()
 
     override fun initWindow() {
         size = size(1000, 800)
@@ -48,7 +53,7 @@ object Geometric : Window() {
 
             if (previousMenu != null) {
                 features += constraint {
-                    left = (previousMenu.left + previousMenu.width).pk
+                    left = (previousMenu.left + previousMenu.width + 1).pk
                 }
             }
 
@@ -71,11 +76,12 @@ object Geometric : Window() {
 
             if (previousTool != null) {
                 features += constraint {
-                    left = (previousTool.left + previousTool.width).pk
+                    left = (previousTool.left + previousTool.width + 1).pk
                 }
             }
 
             features += inputHover({ hoverF.disabled = false }, { hoverF.disabled = true })
+            features += inputClick { GeometricEvents.toolSelected(id) }
         }
     }
 
@@ -93,7 +99,6 @@ object Geometric : Window() {
                 val toolbarEdit = toolbarMenu("toolbar-edit", "Edit", toolbarFile)  addTo children
                 var toolbarHelp = toolbarMenu("toolbar-help", "Help", toolbarEdit)  addTo children
 
-
             }
 
             children += control(id = "tools", left = 0.pk, right = 0.pk, top = 27.pk, height = 54.pk) {
@@ -105,6 +110,13 @@ object Geometric : Window() {
 
             }
 
+            children += box(left = 0.pk, right = 0.pk, top = 81.pk, bottom = 0.pk, id = "renderer") {
+                renderer = Renderer(this)
+                renderer.registerHandlers()
+                features += renderer
+
+                features += inputClick { GeometricEvents.canvasClicked(toRelativeCoord(Mouse.position.toVec2i() - Vec2i(Geometric.insets.left, Geometric.insets.top)) ) }
+            }
             // @formatter:on
         }
 
