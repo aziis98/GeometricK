@@ -24,6 +24,7 @@ class PriorityList<T>() : Iterable<T> {
         treeSet.add(PriorityElement(element, priority))
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun iterator(): Iterator<T> = PriorityIterator(treeSet.iterator())
 
     internal class PriorityIterator<T>(val iterator: Iterator<PriorityElement<T>>) : Iterator<T> {

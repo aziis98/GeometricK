@@ -1,22 +1,11 @@
 package com.aziis98.geometric.ui
 
+import com.aziis98.deluengine.maths.Vec2i
 import com.aziis98.geometric.ui.feature.*
+import com.aziis98.geometric.util.*
 import java.util.*
 
 // Copyright 2016 Antonio De Lucreziis
-
-interface ISized {
-    val width: PackedInt
-    val height: PackedInt
-}
-
-fun Box.box(left: PackedInt = ABSENT,
-        right: PackedInt = ABSENT,
-        top: PackedInt = ABSENT,
-        bottom: PackedInt = ABSENT,
-        width: PackedInt = ABSENT,
-        height: PackedInt = ABSENT,
-        id: String = NO_ID) = Box(this, left, right, top, bottom, width, height, id)
 
 val ABSENT:PackedInt
     get() = PackedInt(0, false)
@@ -26,18 +15,21 @@ val ZERO: PackedInt
 
 const val NO_ID = "__noId__"
 
-open class Box(val container: ISized,
+open class Box(val container: IPackSized,
                var left:   PackedInt = ABSENT,
                var right:  PackedInt = ABSENT,
                var top:    PackedInt = ABSENT,
                var bottom: PackedInt = ABSENT,
                override var width:  PackedInt = ABSENT,
                override var height: PackedInt = ABSENT,
-               val id: String = NO_ID) : ISized {
+               val id: String = NO_ID) : IPackSized {
+
+    val features = PriorityList<Feature>()
+    val children = ArrayList<Box>()
 
     fun updateLayout() {
 
-        featuresOfType<LayoutConstraintFeature>().forEach(LayoutConstraintFeature::updateConstraint)
+        featuresOfType<ConstraintFeature>().forEach(ConstraintFeature::updateConstraint)
 
         when {
             left.isAbsent() -> left.value = container.width - right - width
@@ -51,51 +43,35 @@ open class Box(val container: ISized,
             height.isAbsent() -> height.value = container.height - top - bottom
         }
 
-        children.forEach { it.updateLayout() }
+        children.forEach(Box::updateLayout)
     }
 
-    val features = ArrayList<Feature>()
-    val children = ArrayList<Box>()
+    inline fun <reified F> featuresOfType() = features.filterIsInstance<F>()
+    inline fun <reified F> featureOfType() = features.first { it is F } as F
 
-    inline fun <reified F> featuresOfType(): Collection<F> {
-        // println("Retriving feature of type: ${F::class.simpleName}")
-        return features /* .apply { println(this) } */ .filterIsInstance<F>() // .apply { println(this) }
-    }
-
-    companion object {
-
-        fun fillContainer(container: Box) = Box(container, ZERO, ZERO, ZERO, ZERO)
-
+    fun query(id: String): Box {
+        return children.first { it.id == id }
     }
 
     override fun toString(): String {
-        return """Box(left = $left, right = $right, top = $top, bottom = $bottom, width = $width, height = $height) [
-        |   ${ if (children.isEmpty()) "" else children.map { "\t" + it.toString() + "\n" }.reduce { a, b -> a + b }}
-        |]
-        """.trimMargin()
+        return "Box(id = $id, left = $left, right = $right, top = $top, bottom = $bottom, width = $width, height = $height)"
     }
 
+    val parent: Box?
+        get() = container as? Box
+
 }
 
-class PackedInt(var value: Int, val present: Boolean) {
-    fun isAbsent() = !present
-    fun isPresent() = present
-
-    fun toInt() = value
-
-    override fun toString() = "${if (present) "V" else "X"}$value"
+fun Box.contains(rel: Vec2i): Boolean {
+    return rel.x >= 0 && rel.y >= 0 && rel.x <= width.toInt() && rel.y <= height.toInt()
 }
 
-val Int.pk: PackedInt
-    get() = PackedInt(this, true)
+val Box.absoluteLeft: Int
+    get() = (parent?.absoluteLeft ?: 0) + left.toInt()
 
-// Makes [PackedInt] work with normal Ints in addition and subtractions
+val Box.absoluteTop: Int
+    get() = (parent?.absoluteTop ?: 0) + top.toInt()
 
-operator fun PackedInt.plus(other: PackedInt) = value + other.value
-operator fun PackedInt.plus(other: Int) = value + other
-operator fun Int.plus(other: PackedInt) = this + other.value
-
-operator fun PackedInt.minus(other: PackedInt) = value - other.value
-operator fun PackedInt.minus(other: Int) = value - other
-operator fun Int.minus(other: PackedInt) = this - other.value
-
+fun Box.toRelativeCoord(absPosition: Vec2i): Vec2i {
+    return absPosition - Vec2i(absoluteLeft, absoluteTop)
+}

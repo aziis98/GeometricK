@@ -1,5 +1,6 @@
 package com.aziis98.geometric.window
 
+import com.aziis98.deluengine.io.*
 import java.awt.*
 import java.awt.event.*
 import java.awt.image.BufferedImage
@@ -13,6 +14,9 @@ abstract class Window : JFrame() {
     init {
         initWindow()
 
+        Mouse.registerToComponent(this)
+        Keyboard.registerToComponent(this)
+
         addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent) {
                 buffer = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
@@ -22,19 +26,21 @@ abstract class Window : JFrame() {
 
         defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
         setLocationRelativeTo(null)
-        isVisible = true
 
         background = Color.BLACK
         contentPane.background = Color(0, 0, 0, 0)
 
         System.setProperty("sun.awt.noerasebackground", "true")
-        // createBufferStrategy(3)
-
-        thread { applicationLoop() }
     }
 
     fun start() {
         init()
+
+        isVisible = true
+
+        thread {
+            applicationLoop()
+        }
     }
 
     // Abstract Methods
@@ -132,6 +138,7 @@ abstract class Window : JFrame() {
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB)
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
 
         render(g)
 

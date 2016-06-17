@@ -21,13 +21,20 @@ infix fun <E> E.addTo(collection: MutableCollection<E>): E {
     return this
 }
 
+infix fun <E> E.addTo(prioriryList: PriorityList<in E>): E {
+    prioriryList.add(this)
+    return this
+}
+
 fun Graphics2D.drawStringCentered(string: String, x: Int, y: Int) : Rectangle2D {
     val bounds = fontMetrics.getStringBounds(string, this)
     drawString(string, (x - bounds.width / 2).toInt(), y + (bounds.height / 2).toInt())
     return bounds
 }
 
-fun Box.tryRender(g: Graphics2D) = tryCallOn<RenderFeature> { it.render(g) }
+fun Box.tryRender(g: Graphics2D) = tryCallOn<RenderFeature> {
+    it.render(g)
+}
 
 inline fun <reified F> Box.tryCallOn(action: (F)->Unit) {
     featuresOfType<F>().forEach(action)
@@ -95,3 +102,16 @@ infix fun (() -> Unit).iff(condition: Boolean) {
     if (condition)
         this()
 }
+
+// GRAPHICS2D
+//
+
+fun Graphics2D.drawCircle(x: Int, y: Int, radius: Int) {
+    drawOval(x - radius, y - radius, radius * 2, radius * 2)
+}
+
+fun Graphics2D.fillCircle(x: Int, y: Int, radius: Int) {
+    fillOval(x - radius, y - radius, radius * 2, radius * 2)
+}
+
+//
