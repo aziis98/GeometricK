@@ -1,10 +1,11 @@
 package com.aziis98.geometric.ui
 
+import com.aziis98.geometric.util.*
 import com.aziis98.geometric.window.Window
 
 // Copyright 2016 Antonio De Lucreziis
 
-class JFrameContainer(val window: Window) : ISized {
+class JFrameContainer(val window: Window) : IPackSized {
     override val width: PackedInt
         get() = window.width.pk
     override val height: PackedInt
@@ -12,5 +13,5 @@ class JFrameContainer(val window: Window) : ISized {
 
 }
 
-class WindowUI(window: Window) : Box(JFrameContainer(window), ZERO, ZERO, ZERO, ZERO)
+class WindowUI(window: Window) : Box(JFrameContainer(window), ZERO, ZERO, ZERO, ZERO, id = "window")
 

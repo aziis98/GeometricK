@@ -15,12 +15,8 @@ abstract class Window : JFrame() {
 
         addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent) {
-                // cancelPause()
-                // pauseRendering = true
-
                 buffer = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-
-                // renderInternal()
+                renderInternal()
             }
         })
 
@@ -132,8 +128,14 @@ abstract class Window : JFrame() {
             buffer = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
         }
 
-        render(buffer?.graphics as Graphics2D)
-        graphics.drawImage(buffer, 0, 0, null)
+        val g = buffer?.graphics as Graphics2D
+
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB)
+
+        render(g)
+
+        graphics.drawImage(buffer, insets.left, insets.top, null)
 
         frameCount++
     }

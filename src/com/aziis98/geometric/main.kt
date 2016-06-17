@@ -1,7 +1,7 @@
 package com.aziis98.geometric
 
 import com.aziis98.geometric.ui.*
-import com.aziis98.geometric.ui.feature.*
+import com.aziis98.geometric.ui.feature.constraint
 import com.aziis98.geometric.ui.feature.render.*
 import com.aziis98.geometric.util.*
 import com.aziis98.geometric.window.*
@@ -10,7 +10,11 @@ import java.awt.*
 
 // Copyright 2016 Antonio De Lucreziis
 
-fun main(args: Array<String>) { Geometric.start() }
+fun main(args: Array<String>) {
+    Geometric.start()
+}
+
+val COLOR_TOOLBAR_LABEL = Color(0xCCCCCC)
 
 object Geometric : Window() {
 
@@ -22,29 +26,45 @@ object Geometric : Window() {
         resizeable = true
     }
 
+    fun Box.toolbarMenu(id: String, label: String, previousMenu: Box? = null): Box {
+        return control(id = id, left = 0.pk, top = 0.pk, height = 18.pk) {
+            features += renderText(label, COLOR_TOOLBAR_LABEL) { w, h ->
+                width = (w + 20).pk
+            }
+            if (previousMenu != null) {
+                features += constraint {
+                    left = (previousMenu.left + previousMenu.width).pk
+                }
+            }
+        }
+    }
+
     override fun init() {
         ui.apply {
-            // features += renderBorder(Color.BLUE)
             features += renderChildren()
 
-            val box1 = box(left = 100.pk, right = 100.pk, top = 10.pk, height = 100.pk).apply {
-                features += renderBorder(Color.WHITE)
-                features += renderChildren()
-            } addTo children
+            children += control(id = "toolbar", left = 0.pk, right = 0.pk, top = 0.pk, height = 27.pk) {
+                features += renderNinePatch(TextureLoader.ninePatch("/ui/toolbar.png"))
 
-            box(left = 200.pk, right = 200.pk, height = 27.pk).apply {
-                features += layoutConstraint {
-                    top = (box1.top + box1.height + 10).pk
-                }
-                // features += renderBorder(Color.ORANGE)
-                features += renderChildren()
-                features += RenderNinePatchFeature(this, TextureLoader.ninePatch("/ui/toolbar.png"))
-            } addTo children
+                val toolbarFile = toolbarMenu("toolbar-file", "File") addTo children
+                val toolbarEdit = toolbarMenu("toolbar-edit", "Edit", toolbarFile) addTo children
+                val toolbar3 = toolbarMenu("toolbar-3", "A-Long-Menu", toolbarEdit) addTo children
+                val toolbar4 = toolbarMenu("toolbar-4", "Help", toolbar3) addTo children
+
+            }
         }
 
         ui.updateLayout()
 
-        println(ui.toString())
+        printfRec<Box>(ui) { fsb, box, rec ->
+            fsb.appendln("$box [")
+            fsb.indented {
+                box.children.forEach {
+                    rec(it)
+                }
+            }
+            fsb.appendln("]")
+        }
     }
 
     override fun render(g: Graphics2D) {
