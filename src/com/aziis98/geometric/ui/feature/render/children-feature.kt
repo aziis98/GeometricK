@@ -3,7 +3,7 @@ package com.aziis98.geometric.ui.feature.render
 import com.aziis98.geometric.ui.Box
 import com.aziis98.geometric.ui.feature.RenderFeature
 import com.aziis98.geometric.util.tryRender
-import java.awt.Graphics2D
+import java.awt.*
 
 
 // Copyright 2016 Antonio De Lucreziis
@@ -14,7 +14,13 @@ class RenderChildrenFeature(override val owner: Box, override var disabled: Bool
 
         owner.children.forEach {
             g.translate(it.left.value, it.top.value)
+
+            val bufferClip = g.getClipBounds(Rectangle())
+            g.setClip(0, 0, it.width.toInt(), it.height.toInt())
+
             it.tryRender(g)
+
+            g.clip = bufferClip
             g.translate(-it.left.value, -it.top.value)
         }
     }

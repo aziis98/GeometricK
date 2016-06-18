@@ -9,9 +9,9 @@ import java.awt.event.*
 
 class JFrameContainer(val window: Window) : IPackSized {
     override val width: PackedInt
-        get() = window.width.pk
+        get() = (window.width - window.insets.left - window.insets.right).pk
     override val height: PackedInt
-        get() = window.height.pk
+        get() = (window.height - window.insets.top - window.insets.bottom).pk
 
 }
 

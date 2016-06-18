@@ -1,16 +1,17 @@
 package com.aziis98.geometric.util
 
+import com.aziis98.deluengine.maths.*
 import com.aziis98.geometric.ui.Box
 import com.aziis98.geometric.ui.feature.RenderFeature
 import java.awt.Graphics2D
-import java.awt.geom.Rectangle2D
+import java.awt.geom.*
 import kotlin.concurrent.thread
 
 // Copyright 2016 Antonio De Lucreziis
-
-operator fun <E> MutableCollection<E>.plusAssign(element: E) {
-    this.add(element)
-}
+//
+//operator fun <E> MutableCollection<E>.plusAssign(element: E) {
+//    this.add(element)
+//}
 
 operator fun <E> PriorityList<E>.plusAssign(element: E) {
     this.add(element)
@@ -115,3 +116,10 @@ fun Graphics2D.fillCircle(x: Int, y: Int, radius: Int) {
 }
 
 //
+
+
+fun Point2D.toVec2d() = Vec2d(x, y)
+fun Point2D.toVec2i() = Vec2i(x.toInt(), y.toInt())
+
+fun Vec2d.toPoint2D() = Point2D.Double(x, y)
+fun Vec2i.toPoint2D() = Point2D.Double(x.toDouble(), y.toDouble())

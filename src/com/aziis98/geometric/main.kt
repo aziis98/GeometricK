@@ -1,9 +1,8 @@
 package com.aziis98.geometric
 
-import com.aziis98.deluengine.io.Mouse
 import com.aziis98.deluengine.maths.Vec2i
 import com.aziis98.geometric.event.GeometricEvents
-import com.aziis98.geometric.renderer.Renderer
+import com.aziis98.geometric.renderer.*
 import com.aziis98.geometric.ui.*
 import com.aziis98.geometric.ui.feature.*
 import com.aziis98.geometric.ui.feature.input.*
@@ -22,10 +21,11 @@ fun main(args: Array<String>) {
 }
 
 val COLOR_BACKGROUND = Color(0xFFFFFF)
-val COLOR_TOOLBAR_LABEL = Color(0x888888)
-val COLOR_TOOLBAR_LABEL_HOVER = Color(0x000000)
+val COLOR_TOOLBAR_LABEL = Color(0x777777)
+val COLOR_TOOLBAR_LABEL_HOVER = Color(0x88bbbbbb.toInt(), true)
 
 val TEXTURE_TOOLBAR = TextureLoader.ninePatch("/ui/light-toolbar.png")
+val TEXTURE_STATUSBAR = TextureLoader.ninePatch("/ui/light-statusbar.png")
 
 object Geometric : Window() {
 
@@ -45,8 +45,8 @@ object Geometric : Window() {
             } addTo features
 
             val hoverF = renderize { g ->
-                g.color = Color(0x88DDDDDD.toInt(), true)
-                g.fillRect(0, 0, width.toInt(), height.toInt())
+                g.color = COLOR_TOOLBAR_LABEL_HOVER
+                g.fillRect(0, 0, width.toInt(), height.toInt() - 2)
             }
             features.add(hoverF, PRIORITY_HIGH)
             hoverF.disabled = true
@@ -68,7 +68,7 @@ object Geometric : Window() {
             features += constraintAlign(vertically = true)
 
             val hoverF = renderize { g ->
-                g.color = Color(0x88DDDDDD.toInt(), true)
+                g.color = COLOR_TOOLBAR_LABEL_HOVER
                 g.fillRect(0, 0, width.toInt(), height.toInt())
             }
             features.add(hoverF, PRIORITY_HIGH)
@@ -76,7 +76,7 @@ object Geometric : Window() {
 
             if (previousTool != null) {
                 features += constraint {
-                    left = (previousTool.left + previousTool.width + 1).pk
+                    left = (previousTool.left + previousTool.width + 4).pk
                 }
             }
 
@@ -92,6 +92,15 @@ object Geometric : Window() {
 
             // @formatter:off
 
+            // RENDERER
+            children += box(left = 0.pk, right = 0.pk, top = 82.pk, bottom = 28.pk, id = "renderer") {
+                features += Renderer(this).apply {
+                    renderer = this
+                    registerHandlers()
+                }
+            }
+
+            // TOOLBAR
             children += control(id = "toolbar", left = 0.pk, right = 0.pk, top = 0.pk, height = 27.pk) {
                 features += renderNinePatch(TEXTURE_TOOLBAR)
 
@@ -101,22 +110,28 @@ object Geometric : Window() {
 
             }
 
+            // TOOLS
             children += control(id = "tools", left = 0.pk, right = 0.pk, top = 27.pk, height = 54.pk) {
                 features += renderNinePatch(TEXTURE_TOOLBAR)
 
-                val toolPoint    = tool("tool-point"   , "point")                        addTo children
-                val toolCentroid = tool("tool-centroid", "point-centroid", toolPoint   ) addTo children
-                val toolLine     = tool("tool-line"    , "line"          , toolCentroid) addTo children
+                val toolPoint    = tool(TOOL_POINT, "point") addTo children
+                val toolCentroid = tool(TOOL_CENTROID_FIRST, "point-centroid", toolPoint) addTo children
+                val toolLine     = tool(TOOL_LINE_A, "line", toolCentroid) addTo children
 
             }
 
-            children += box(left = 0.pk, right = 0.pk, top = 81.pk, bottom = 0.pk, id = "renderer") {
-                renderer = Renderer(this)
-                renderer.registerHandlers()
-                features += renderer
+            // STATUSBAR
+            children += control(id="statusbar", left = 0.pk, right = 0.pk, bottom = 0.pk, height = 27.pk) {
+                features += renderNinePatch(TEXTURE_STATUSBAR)
 
-                features += inputClick { GeometricEvents.canvasClicked(toRelativeCoord(Mouse.position.toVec2i() - Vec2i(Geometric.insets.left, Geometric.insets.top)) ) }
+                children += control(id = "status-tool",right = 0.pk, height = 27.pk) {
+                    features += constraintAlign(vertically = true)
+                    val textF = renderText("TOOL: $TOOL_NONE", COLOR_TOOLBAR_LABEL, offset = Vec2i(0,-2)) { w, h ->
+                        width = (w + 20).pk
+                    } addTo features
+                }
             }
+
             // @formatter:on
         }
 

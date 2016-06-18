@@ -49,8 +49,27 @@ open class Box(val container: IPackSized,
     inline fun <reified F> featuresOfType() = features.filterIsInstance<F>()
     inline fun <reified F> featureOfType() = features.first { it is F } as F
 
-    fun query(id: String): Box {
-        return children.first { it.id == id }
+    fun query(target: String) = query(target.toPredicate())
+
+    fun query(predicate: (Box) -> Boolean): Box? {
+
+        val box = children.firstOrNull(predicate)
+
+        if (box != null) {
+            return box
+        }
+        else {
+            children.forEach {
+                val bbox = it.query(predicate)
+                if (bbox != null) {
+                    return bbox
+                }
+            }
+        }
+
+        // throw NoSuchElementException("There is no element in this ui that satisfies that predicate")
+
+        return null
     }
 
     override fun toString(): String {
@@ -74,4 +93,8 @@ val Box.absoluteTop: Int
 
 fun Box.toRelativeCoord(absPosition: Vec2i): Vec2i {
     return absPosition - Vec2i(absoluteLeft, absoluteTop)
+}
+
+fun String.toPredicate(): (Box) -> Boolean {
+    return { it.id == this }
 }
