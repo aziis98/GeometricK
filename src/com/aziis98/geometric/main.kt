@@ -115,8 +115,9 @@ object Geometric : Window() {
                 features += renderNinePatch(TEXTURE_TOOLBAR)
 
                 val toolPoint    = tool(TOOL_POINT, "point") addTo children
-                val toolCentroid = tool(TOOL_CENTROID_FIRST, "point-centroid", toolPoint) addTo children
-                val toolLine     = tool(TOOL_LINE_A, "line", toolCentroid) addTo children
+                val toolCentroid = tool(TOOL_CENTROID, "point-centroid", toolPoint) addTo children
+                val toolLine     = tool(TOOL_LINE, "line", toolCentroid) addTo children
+                val toolLinePerp = tool(TOOL_LINE_PERPENDICULAR, "line-perpendicular", toolLine) addTo children
 
             }
 

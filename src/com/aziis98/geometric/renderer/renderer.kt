@@ -9,7 +9,7 @@ import com.aziis98.geometric.ui.feature.RenderFeature
 import com.aziis98.geometric.ui.feature.input.*
 import com.aziis98.geometric.ui.feature.render.RenderTextFeature
 import com.aziis98.geometric.util.*
-import java.awt.*
+import java.awt.Graphics2D
 import java.awt.event.*
 import java.awt.geom.AffineTransform
 import java.util.*
@@ -19,11 +19,26 @@ import kotlin.properties.Delegates
 
 // @formatter:off
 const val TOOL_NONE           = "none"
+
 const val TOOL_POINT          = "point"
+const val TOOL_POINT_POSITION = "point-position"
+
 const val TOOL_CENTROID_FIRST = "centroid-start"
 const val TOOL_CENTROID       = "centroid"
-const val TOOL_LINE_A         = "line-a"
-const val TOOL_LINE_B         = "line-b"
+
+const val TOOL_LINE   = "line"
+const val TOOL_LINE_A = "line-a"
+const val TOOL_LINE_B = "line-b"
+
+const val TOOL_LINE_PERPENDICULAR       = "line-perpendicular"
+const val TOOL_LINE_PERPENDICULAR_LINE  = "line-perpendicular-line"
+const val TOOL_LINE_PERPENDICULAR_POINT = "line-perpendicular-point"
+
+const val TOOL_LINE_PARALLEL       = "line-parallel"
+const val TOOL_LINE_PARALLEL_LINE  = "line-parallel-line"
+const val TOOL_LINE_PARALLEL_POINT = "line-parallel-point"
+
+
 // @formatter:on
 
 class Renderer(override val owner: Box,
@@ -35,7 +50,7 @@ class Renderer(override val owner: Box,
         statusTool.featureOfType<RenderTextFeature>().text = "TOOL: $newValue"
     }
 
-    val handlers = HashMap<String, ToolHander>()
+    val handlers = HashMap<String, ITool>()
     var dragging: Point? = null
 
     val primitives = LinkedList<Primitive>()
@@ -80,20 +95,22 @@ class Renderer(override val owner: Box,
         }
 
         Mouse.on<MouseReleased> {
-            if (it.button == MouseEvent.BUTTON3 && dragging != null) {
+            if (it.button == MouseEvent.BUTTON1 && dragging != null) {
                 dragging = null
             }
         }
 
         GeometricEvents.on<ToolSelected> {
-            state = it.id
+            val toolSeq = handlers[it.id] as ToolSequencer
+
+            state = toolSeq.firstHandler.state
         }
 
         GeometricEvents.on<CanvasClicked> {
             val pt2d = (it.position - Vec2i(owner.width.toInt() / 2, owner.height.toInt() / 2)).toPoint2D()
             val screenToWorldPt = camera.inverseTransform(pt2d, null)
 
-            state = handlers[state]?.handle(this, screenToWorldPt.toVec2i()) ?: state
+            state = (handlers[state] as ToolHander).handle(this, screenToWorldPt.toVec2i())
         }
 
         Keyboard.on<KeyReleased> {
@@ -105,8 +122,8 @@ class Renderer(override val owner: Box,
 
     fun registerHandlers() {
         HandlePoint
-        HandleLineA
-        HandleLineB
+        HandleLine
+        HandleLinePerpendicular
     }
 
     override fun render(g: Graphics2D) {
@@ -115,15 +132,16 @@ class Renderer(override val owner: Box,
 
         primitives.forEach {
             it.validate()
-            it.render(g)
+            it.highlighted = (handlers[state] as? ToolHander)?.highlight(this, it) ?: false
+            it.render(this, g)
         }
 
         g.transform(camera.createInverse())
         g.translate(-owner.width.toInt() / 2, -owner.height.toInt() / 2)
     }
 
-    fun registerHandler(toolHander: ToolHander) {
-        handlers.put(toolHander.state, toolHander)
+    fun registerTool(tool: ITool) {
+        handlers.put(tool.state, tool)
     }
 
     fun nearestPointOrNull(mousePos: Vec2d) : Point? {
@@ -134,154 +152,17 @@ class Renderer(override val owner: Box,
             .firstOrNull()
     }
 
-}
+    val mouseWorldPos: Vec2d
+        get() {
+            val position = owner.toRelativeCoord(Mouse.position.toVec2i() - Vec2i(Geometric.insets.left, Geometric.insets.top))
 
-abstract class Primitive() {
-    val dependent: LinkedList<Primitive> = LinkedList()
+            val pt2d = (position - Vec2i(owner.width.toInt() / 2, owner.height.toInt() / 2)).toPoint2D()
+            val screenToWorldPt = camera.inverseTransform(pt2d, null)
 
-    var dirty: Boolean = true
-    var color: Color = Color.BLACK
-    var highlighted: Boolean = false
-
-    abstract fun render(g: Graphics2D)
-
-    open fun recompute() { }
-
-    /**
-     * Destroys all the primitives that depends on this primitive
-     */
-    open fun destroy() {
-        dependent.forEach { it.destroy() }
-    }
-
-    fun validate() {
-        if (dirty) {
-            recompute()
-            dirty = false
-        }
-    }
-
-    fun invalidate() {
-        dirty = true
-        dependent.forEach { it.invalidate() }
-    }
-}
-
-class Point(val position: Vec2d) : Primitive() {
-    override fun render(g: Graphics2D) {
-        if (highlighted) {
-            g.color = Color.ORANGE
-            g.drawCircle(x.toInt(), y.toInt(), 7)
+            return screenToWorldPt.toVec2d()
         }
 
-        g.color = color
-        g.drawCircle(position.x.toInt(), position.y.toInt(), 5)
-        g.fillCircle(position.x.toInt(), position.y.toInt(), 3)
-    }
-
-    val x: Double
-        get() = position.x
-
-    val y: Double
-        get() = position.y
-
-    override fun toString(): String {
-        return "Point#$nuid($position)"
-    }
 }
 
-open class Line(var a: Double, var b: Double, var c: Double) : Primitive() {
-    internal var p1 = Vec2i(0, 0)
-    internal var p2 = Vec2i(0, 0)
 
-    override fun render(g: Graphics2D) {
-        if (highlighted) {
-            g.color = Color.ORANGE
-            g.stroke = BasicStroke(2.0F)
-        }
-        else {
-            g.color = color
-        }
 
-        val renderer = Geometric.renderer
-        val ty = -renderer.camera.translateY - renderer.owner.height.toInt() / 2
-
-        val y = c / b
-
-        val x1 = (c - b * (ty)) / a
-        val x2 = (c - b * (ty + renderer.owner.height.toInt())) / a
-
-        if (a != 0.0) {
-            p1.x = x1.toInt()
-            p1.y = ty.toInt()
-
-            p2.x = x2.toInt()
-            p2.y = (ty + renderer.owner.height.toInt()).toInt()
-        }
-        else {
-            p1.x = -renderer.camera.translateX.toInt() - renderer.owner.width.toInt() / 2
-            p1.y = y.toInt()
-
-            p2.x = -renderer.camera.translateX.toInt() + renderer.owner.width.toInt() / 2
-            p2.y = y.toInt()
-        }
-
-        g.drawLine(p1.x, p1.y, p2.x, p2.y)
-    }
-
-    override fun toString(): String {
-        return "Line#$nuid( ($a)x + ($b)y + $c = 0 )"
-    }
-}
-
-class Line2Pt(val pointA: Point, val pointB: Point) : Line(pointB.y - pointA.y, pointA.x - pointB.x, pointA.x * pointB.y - pointA.y * pointB.x) {
-
-    init {
-        pointA.dependent += this
-        pointB.dependent += this
-    }
-
-    override fun recompute() {
-        a = pointB.y - pointA.y
-        b = pointA.x - pointB.x
-        c = pointA.x * pointB.y - pointA.y * pointB.x
-    }
-
-    override fun destroy() {
-        super.destroy()
-
-        pointA.dependent -= this
-        pointB.dependent -= this
-    }
-
-    override fun toString(): String {
-        return "Line#$nuid(#${pointA.nuid} , #${pointB.nuid})"
-    }
-}
-
-class LinePerpendicular(val line: Line, val point: Point) : Line(line.b, -line.a, point.x * line.b - point.y * line.a) {
-    init {
-        line.dependent += this
-        point.dependent += this
-    }
-
-    override fun recompute() {
-        a = line.b
-        b = -line.a
-        c = point.x * line.b - point.y * line.a
-    }
-
-    override fun destroy() {
-        super.destroy()
-
-        line.dependent -= this
-        point.dependent -= this
-    }
-
-    override fun toString(): String {
-        return "LinePerpendicular#$nuid(#${line.nuid} , #${point.nuid})"
-    }
-}
-
-val Primitive.nuid: Int
-    get() = hashCode() % 100

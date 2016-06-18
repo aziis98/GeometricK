@@ -5,6 +5,7 @@ import com.aziis98.geometric.ui.Box
 import com.aziis98.geometric.ui.feature.RenderFeature
 import java.awt.Graphics2D
 import java.awt.geom.*
+import java.util.*
 import kotlin.concurrent.thread
 
 // Copyright 2016 Antonio De Lucreziis
@@ -34,7 +35,12 @@ fun Graphics2D.drawStringCentered(string: String, x: Int, y: Int) : Rectangle2D 
 }
 
 fun Box.tryRender(g: Graphics2D) = tryCallOn<RenderFeature> {
-    it.render(g)
+    try {
+        it.render(g)
+    }
+    catch(e: ConcurrentModificationException) {
+        e.printStackTrace()
+    }
 }
 
 inline fun <reified F> Box.tryCallOn(action: (F)->Unit) {
