@@ -15,19 +15,21 @@ class RenderChildrenFeature(override val owner: Box) : RenderFeature() {
         owner.children.forEach {
             g.translate(it.left.value, it.top.value)
 
-            val noRenderClip = it.featureOfType<ClipRenderFeature>() == null
+            val hasRenderClip = it.featureOfType<ClipRenderFeature>() != null
 
-            if (noRenderClip) {
+            val bufferClip = g.getClipBounds(Rectangle())
+
+            if (hasRenderClip) {
+                g.clip = null
                 it.tryRender(g)
             }
             else {
-                val bufferClip = g.getClipBounds(Rectangle())
                 g.setClip(0, 0, it.width.toInt(), it.height.toInt())
-
                 it.tryRender(g)
-
-                g.clip = bufferClip
             }
+
+            g.clip = bufferClip
+
             g.translate(-it.left.value, -it.top.value)
         }
     }

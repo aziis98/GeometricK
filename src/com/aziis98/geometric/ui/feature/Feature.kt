@@ -7,7 +7,6 @@ import java.awt.Graphics2D
 
 interface Feature {
     val owner: Box
-    var disabled: Boolean
 }
 /*
 interface MouseInputFeature : Feature {
@@ -76,8 +75,8 @@ interface KeyboardInputFeature : Feature {
 }
 */
 
-interface RenderFeature : Feature {
-    fun render(g: Graphics2D)
+abstract class RenderFeature(var disabled: Boolean = false) : Feature {
+    abstract fun render(g: Graphics2D)
 }
 
 interface ConstraintFeature : Feature {

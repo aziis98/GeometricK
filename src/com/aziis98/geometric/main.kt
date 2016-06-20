@@ -186,20 +186,29 @@ fun WindowUI.initializeMenubar() {
     }
 }
 
-fun Box.contextmenu(id: String, block: Box.() -> Unit) = control(id = id, left = 100.pk, top = 100.pk, height = 0.pk) {
-    features += renderNinePatch(TEXTURE_CONTEXTMENU)
-    features += constraint {
-        width = (children.map { it.width.toInt() }.max() ?: 0).pk
+fun Box.contextmenu(id: String, block: Box.() -> Unit): Box {
+
+    val contextmenu = control(id = id, left = 100.pk, top = 100.pk, height = 0.pk) {
+        features += renderNinePatch(TEXTURE_CONTEXTMENU)
+        features += constraint {
+            width = (children.map { it.width.toInt() }.max() ?: 0).pk
+            height = (children.size * 27).pk
+        }
+
+        this.apply(block)
+
+        disabled = true
     }
 
-    this@contextmenu.features += inputClick {
-        this@control.disabled = false
-        this@control.left = 0.pk
-        this@control.top = this@contextmenu.height
-        this@control.invalidate()
+    features += inputClick {
+
+        contextmenu.disabled = false
+        contextmenu.left = 0.pk
+        contextmenu.top = this@contextmenu.height
+        contextmenu.invalidate()
     }
 
-    this.apply(block)
+    return contextmenu
 }
 
 fun Box.context_button(label: String, id: String = NO_ID, onClick: () -> Unit) = control(id = id, left = 0.pk, height = 27.pk) {
@@ -207,7 +216,11 @@ fun Box.context_button(label: String, id: String = NO_ID, onClick: () -> Unit) =
         width = Math.max(width.toInt(), w).pk
     }
     features += inputClick { onClick() }
-    height = (height.toInt() + 27).pk
+
+    val index = this@context_button.children.size
+    features += constraint {
+        top = (index * 27).pk
+    }
 
     this@context_button.children += this
 }
