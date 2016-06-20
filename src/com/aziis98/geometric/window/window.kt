@@ -1,5 +1,7 @@
 package com.aziis98.geometric.window
 
+import com.aziis98.deluengine.event.*
+import com.aziis98.deluengine.event.Event
 import com.aziis98.deluengine.io.*
 import java.awt.*
 import java.awt.event.*
@@ -8,6 +10,12 @@ import javax.swing.*
 import kotlin.concurrent.thread
 
 // Copyright 2016 Antonio De Lucreziis
+
+object WindowEvents : EventEmitter<WindowEvents>() {
+
+}
+
+class WindowResized(val width: Int, val height: Int) : Event<WindowEvents>
 
 abstract class Window : JFrame() {
 
@@ -19,8 +27,11 @@ abstract class Window : JFrame() {
 
         addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent) {
-                buffer = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-                renderInternal()
+                buffer = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB).apply {
+                    graphics.drawImage(buffer, 0, 0, null)
+                }
+                WindowEvents.emit(WindowResized(width, height))
+                // renderInternal()
             }
         })
 

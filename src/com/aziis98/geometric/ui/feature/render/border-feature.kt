@@ -7,7 +7,7 @@ import java.awt.*
 
 // Copyright 2016 Antonio De Lucreziis
 
-class RenderBorderFeature(override val owner: Box, var color: Color, override var disabled: Boolean = false) : RenderFeature {
+class RenderBorderFeature(override val owner: Box, var color: Color) : RenderFeature() {
     override fun render(g: Graphics2D) {
         if (disabled) return
 

@@ -1,6 +1,7 @@
 package com.aziis98.geometric
 
 import com.aziis98.deluengine.maths.Vec2i
+import com.aziis98.geometric.Geometric.toolbarMenu
 import com.aziis98.geometric.event.GeometricEvents
 import com.aziis98.geometric.renderer.*
 import com.aziis98.geometric.ui.*
@@ -26,6 +27,7 @@ val COLOR_TOOLBAR_LABEL_HOVER = Color(0x88bbbbbb.toInt(), true)
 
 val TEXTURE_TOOLBAR = TextureLoader.ninePatch("/ui/light-toolbar.png")
 val TEXTURE_STATUSBAR = TextureLoader.ninePatch("/ui/light-statusbar.png")
+val TEXTURE_CONTEXTMENU = TextureLoader.ninePatch("/ui/context-menu.png")
 
 object Geometric : Window() {
 
@@ -59,6 +61,8 @@ object Geometric : Window() {
 
             // features += inputHover({ textF.color = COLOR_TOOLBAR_LABEL_HOVER }, { textF.color = COLOR_TOOLBAR_LABEL })
             features += inputHover({ hoverF.disabled = false }, { hoverF.disabled = true })
+
+            // invalidate()
         }
     }
 
@@ -101,23 +105,18 @@ object Geometric : Window() {
             }
 
             // TOOLBAR
-            children += control(id = "toolbar", left = 0.pk, right = 0.pk, top = 0.pk, height = 27.pk) {
-                features += renderNinePatch(TEXTURE_TOOLBAR)
-
-                val toolbarFile = toolbarMenu("toolbar-file", "File")               addTo children
-                val toolbarEdit = toolbarMenu("toolbar-edit", "Edit", toolbarFile)  addTo children
-                var toolbarHelp = toolbarMenu("toolbar-help", "Help", toolbarEdit)  addTo children
-
-            }
+            ui.initializeMenubar()
 
             // TOOLS
             children += control(id = "tools", left = 0.pk, right = 0.pk, top = 27.pk, height = 54.pk) {
                 features += renderNinePatch(TEXTURE_TOOLBAR)
 
-                val toolPoint    = tool(TOOL_POINT, "point") addTo children
-                val toolCentroid = tool(TOOL_CENTROID, "point-centroid", toolPoint) addTo children
-                val toolLine     = tool(TOOL_LINE, "line", toolCentroid) addTo children
-                val toolLinePerp = tool(TOOL_LINE_PERPENDICULAR, "line-perpendicular", toolLine) addTo children
+                val toolPoint     = tool(TOOL_POINT, "point") addTo children
+                val toolCentroid  = tool(TOOL_CENTROID, "point-centroid", toolPoint) addTo children
+                val toolLine      = tool(TOOL_LINE, "line", toolCentroid) addTo children
+                val toolLineParal = tool(TOOL_LINE_PARALLEL, "line-parallel", toolLine) addTo children
+                val toolLinePerp  = tool(TOOL_LINE_PERPENDICULAR, "line-perpendicular", toolLineParal) addTo children
+                val toolLineInter = tool(TOOL_LINE_INTERSECTION, "line-intersection", toolLinePerp) addTo children
 
             }
 
@@ -137,6 +136,11 @@ object Geometric : Window() {
         }
 
         ui.updateLayout()
+        ui.invalidate()
+
+        WindowEvents.on<WindowResized> {
+            ui.invalidate()
+        }
 
         printfRec<Box>(ui) { fsb, box, rec ->
             fsb.appendln("$box [")
@@ -161,3 +165,66 @@ object Geometric : Window() {
     }
 
 }
+
+@Suppress("UNUSED_VARIABLE")
+fun WindowUI.initializeMenubar() {
+    children += control(id = "menubar", left = 0.pk, right = 0.pk, top = 0.pk, height = 27.pk) {
+        features += renderNinePatch(TEXTURE_TOOLBAR)
+
+        val toolbarFile = toolbarMenu("menubar-file", "File")               addTo children
+        val toolbarEdit = toolbarMenu("menubar-edit", "Edit", toolbarFile)  addTo children
+        var toolbarHelp = toolbarMenu("menubar-help", "Help", toolbarEdit)  addTo children
+
+        toolbarFile.apply {
+            contextmenu("contextmenu-file") {
+                context_button("New") { println("New") }
+                context_button("Save") { println("Saving the file") }
+                context_button("Save As...") { println("Saving the file as") }
+                context_button("Open") { println("Open") }
+            }
+        }
+    }
+}
+
+fun Box.contextmenu(id: String, block: Box.() -> Unit) = control(id = id, left = 100.pk, top = 100.pk, height = 0.pk) {
+    features += renderNinePatch(TEXTURE_CONTEXTMENU)
+    features += constraint {
+        width = (children.map { it.width.toInt() }.max() ?: 0).pk
+    }
+
+    this@contextmenu.features += inputClick {
+        this@control.disabled = false
+        this@control.left = 0.pk
+        this@control.top = this@contextmenu.height
+        this@control.invalidate()
+    }
+
+    this.apply(block)
+}
+
+fun Box.context_button(label: String, id: String = NO_ID, onClick: () -> Unit) = control(id = id, left = 0.pk, height = 27.pk) {
+    features += renderText(label, COLOR_TOOLBAR_LABEL) { w, h ->
+        width = Math.max(width.toInt(), w).pk
+    }
+    features += inputClick { onClick() }
+    height = (height.toInt() + 27).pk
+
+    this@context_button.children += this
+}
+
+/*
+fun WindowUI.showContextMenu(id: String, location: Vec2i) {
+    query(id)?.apply {
+        disabled = false
+        left = (location.x - (parent?.absoluteLeft ?: 0)).pk
+        top  = (location.y - (parent?.absoluteTop  ?: 0)).pk
+        invalidate()
+    }
+}
+
+fun WindowUI.hideContextMenu(id: String) {
+    query(id)?.disabled = true
+}
+*/
+
+

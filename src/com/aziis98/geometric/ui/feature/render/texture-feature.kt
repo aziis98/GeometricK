@@ -8,7 +8,7 @@ import java.awt.Graphics2D
 
 // Copyright 2016 Antonio De Lucreziis
 
-class RenderNinePatchFeature(override val owner: Box, val ninePatch: NinePatch, override var disabled: Boolean = false) : RenderFeature {
+class RenderNinePatchFeature(override val owner: Box, val ninePatch: NinePatch) : RenderFeature() {
     override fun render(g: Graphics2D) {
         if (disabled) return
 
@@ -21,8 +21,7 @@ fun Box.renderNinePatch(ninePatch: NinePatch) = RenderNinePatchFeature(this, nin
 
 class RenderTextureFeature(override val owner: Box,
                            val texture: Texture,
-                           val mode: TextureRenderMode = TextureRenderMode.Strech,
-                           override var disabled: Boolean = false) : RenderFeature {
+                           val mode: TextureRenderMode = TextureRenderMode.Strech) : RenderFeature() {
     override fun render(g: Graphics2D) {
         if (disabled) return
 

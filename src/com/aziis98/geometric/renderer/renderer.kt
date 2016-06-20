@@ -7,9 +7,9 @@ import com.aziis98.geometric.event.*
 import com.aziis98.geometric.ui.*
 import com.aziis98.geometric.ui.feature.RenderFeature
 import com.aziis98.geometric.ui.feature.input.*
-import com.aziis98.geometric.ui.feature.render.RenderTextFeature
+import com.aziis98.geometric.ui.feature.render.*
 import com.aziis98.geometric.util.*
-import java.awt.Graphics2D
+import java.awt.*
 import java.awt.event.*
 import java.awt.geom.AffineTransform
 import java.util.*
@@ -23,8 +23,9 @@ const val TOOL_NONE           = "none"
 const val TOOL_POINT          = "point"
 const val TOOL_POINT_POSITION = "point-position"
 
-const val TOOL_CENTROID_FIRST = "centroid-start"
-const val TOOL_CENTROID       = "centroid"
+const val TOOL_CENTROID        = "centroid"
+const val TOOL_CENTROID_FIRST  = "centroid-start"
+const val TOOL_CENTROID_APPEND = "centroid-append"
 
 const val TOOL_LINE   = "line"
 const val TOOL_LINE_A = "line-a"
@@ -38,16 +39,20 @@ const val TOOL_LINE_PARALLEL       = "line-parallel"
 const val TOOL_LINE_PARALLEL_LINE  = "line-parallel-line"
 const val TOOL_LINE_PARALLEL_POINT = "line-parallel-point"
 
+const val TOOL_LINE_INTERSECTION   = "line-intersection"
+const val TOOL_LINE_INTERSECTION_A = "line-intersection-a"
+const val TOOL_LINE_INTERSECTION_B = "line-intersection-b"
+
 
 // @formatter:on
 
-class Renderer(override val owner: Box,
-               override var disabled: Boolean = false) : RenderFeature {
+class Renderer(override val owner: Box) : RenderFeature() {
 
     val statusTool by lazy { Geometric.ui.query("status-tool")!! }
 
     var state: String by Delegates.observable(TOOL_NONE) { property, oldValue, newValue ->
-        statusTool.featureOfType<RenderTextFeature>().text = "TOOL: $newValue"
+        statusTool.featureOfType<RenderTextFeature>()?.text = "TOOL: $newValue"
+        statusTool.invalidate(2)
     }
 
     val handlers = HashMap<String, ITool>()
@@ -58,17 +63,17 @@ class Renderer(override val owner: Box,
 
     init {
         // ADD DEP FEATURES
-        val point1 = Point(Vec2d(0, 0))
-        primitives.add(point1)
-
-        val point2 = Point(Vec2d(100, 40))
-        primitives.add(point2)
-
-        val line1 = Line2Pt(point1, point2)
-        primitives += line1
-
-        val line2 = LinePerpendicular(line1, point2)
-        primitives += line2
+        val origin = Point(Vec2d(0, 0))
+        primitives.add(origin)
+//
+//        val point2 = Point(Vec2d(100, 40))
+//        primitives.add(point2)
+//
+//        val line1 = Line2Pt(point1, point2)
+//        primitives += line1
+//
+//        val line2 = LinePerpendicular(line1, point2)
+//        primitives += line2
 
         owner.apply {
             features += inputClick { GeometricEvents.canvasClicked(toRelativeCoord(Mouse.position.toVec2i() - Vec2i(Geometric.insets.left, Geometric.insets.top))) }
@@ -92,6 +97,7 @@ class Renderer(override val owner: Box,
                     }
                 }
             }
+            features += ClipRenderFeature(this)
         }
 
         Mouse.on<MouseReleased> {
@@ -115,6 +121,17 @@ class Renderer(override val owner: Box,
 
         Keyboard.on<KeyReleased> {
             when (it.keyCode) {
+                KeyEvent.VK_ENTER -> {
+                    val handler = handlers[state]
+
+                    if (handler is ToolHander) {
+                        if (handler.needsManualTerminator) {
+                            state = handler.manualTermination(this)
+                        }
+                    }
+                }
+                KeyEvent.VK_ESCAPE -> state = TOOL_NONE
+
                 KeyEvent.VK_P -> println(primitives)
             }
         }
@@ -122,15 +139,27 @@ class Renderer(override val owner: Box,
 
     fun registerHandlers() {
         HandlePoint
+        HandleLineIntersection
+        HandleCentroid
         HandleLine
         HandleLinePerpendicular
+        HandleLineParallel
+
+        handlers.forEach { stateKey, toolValue -> println("$stateKey : $toolValue") }
+        println()
     }
+
+    internal val defStroke = BasicStroke(1.0F)
+    internal val defColor = Color.BLACK
 
     override fun render(g: Graphics2D) {
         g.translate(owner.width.toInt() / 2, owner.height.toInt() / 2)
         g.transform(camera)
 
         primitives.forEach {
+            g.stroke = defStroke
+            g.color = defColor
+
             it.validate()
             it.highlighted = (handlers[state] as? ToolHander)?.highlight(this, it) ?: false
             it.render(this, g)
@@ -142,14 +171,6 @@ class Renderer(override val owner: Box,
 
     fun registerTool(tool: ITool) {
         handlers.put(tool.state, tool)
-    }
-
-    fun nearestPointOrNull(mousePos: Vec2d) : Point? {
-        return primitives
-            .filterIsInstance<Point>()
-            .filter { it.position distanceSquaredTo mousePos < 100.0 }
-            .sortedBy { it.position distanceSquaredTo mousePos }
-            .firstOrNull()
     }
 
     val mouseWorldPos: Vec2d

@@ -10,8 +10,7 @@ import com.aziis98.geometric.ui.feature.Feature
 // Copyright 2016 Antonio De Lucreziis
 
 class DragFeature(override val owner: Box,
-                  val onDrag: Box.(button: Int, position: Vec2i, delta: Vec2i)->Unit,
-                  override var disabled: Boolean = false) : Feature {
+                  val onDrag: Box.(button: Int, position: Vec2i, delta: Vec2i)->Unit) : Feature {
     init {
         Mouse.on<MouseDragged> {
             val relPosition = owner.toRelativeCoord(it.position.toVec2i() - Vec2i(Geometric.insets.left, Geometric.insets.top))

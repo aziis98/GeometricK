@@ -5,11 +5,8 @@ import com.aziis98.geometric.util.pk
 
 // Copyright 2016 Antonio De Lucreziis
 
-class LayoutConstraintFeature(override val owner: Box, val constraint: Box.()->Unit,
-                              override var disabled: Boolean = false) : ConstraintFeature {
+class LayoutConstraintFeature(override val owner: Box, val constraint: Box.()->Unit) : ConstraintFeature {
     override fun updateConstraint() {
-        if (disabled) return
-
         owner.constraint()
     }
 }
@@ -19,11 +16,8 @@ fun Box.constraint(constraint: Box.() -> Unit) = LayoutConstraintFeature(this, c
 
 class ConstraintCenterFeature(override val owner: Box,
                               val horizontaly: Boolean = true,
-                              val vertically: Boolean = true,
-                              override var disabled: Boolean = false) : ConstraintFeature {
+                              val vertically: Boolean = true) : ConstraintFeature {
     override fun updateConstraint() {
-        if (disabled) return
-
         if (horizontaly) {
             owner.left = ((owner.container.width.toInt() - owner.width.toInt()) / 2).pk
         }

@@ -7,8 +7,7 @@ import java.awt.Graphics2D
 // Copyright 2016 Antonio De Lucreziis
 
 class RenderizeFeature(override val owner: Box,
-                       val renderAction: Box.(Graphics2D) -> Unit,
-                       override var disabled: Boolean = false) : RenderFeature {
+                       val renderAction: Box.(Graphics2D) -> Unit) : RenderFeature() {
     override fun render(g: Graphics2D) {
         if (disabled) return
 

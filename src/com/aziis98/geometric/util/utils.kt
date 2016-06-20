@@ -2,7 +2,7 @@ package com.aziis98.geometric.util
 
 import com.aziis98.deluengine.maths.*
 import com.aziis98.geometric.ui.Box
-import com.aziis98.geometric.ui.feature.RenderFeature
+import com.aziis98.geometric.ui.feature.*
 import java.awt.Graphics2D
 import java.awt.geom.*
 import java.util.*
@@ -35,6 +35,8 @@ fun Graphics2D.drawStringCentered(string: String, x: Int, y: Int) : Rectangle2D 
 }
 
 fun Box.tryRender(g: Graphics2D) = tryCallOn<RenderFeature> {
+    if (disabled) return
+
     try {
         it.render(g)
     }
@@ -43,7 +45,7 @@ fun Box.tryRender(g: Graphics2D) = tryCallOn<RenderFeature> {
     }
 }
 
-inline fun <reified F> Box.tryCallOn(action: (F)->Unit) {
+inline fun <reified F : Feature> Box.tryCallOn(action: (F)->Unit) {
     featuresOfType<F>().forEach(action)
 }
 
@@ -129,3 +131,6 @@ fun Point2D.toVec2i() = Vec2i(x.toInt(), y.toInt())
 
 fun Vec2d.toPoint2D() = Point2D.Double(x, y)
 fun Vec2i.toPoint2D() = Point2D.Double(x.toDouble(), y.toDouble())
+
+val ZERO: Vec2d
+    get() = Vec2d(0, 0)

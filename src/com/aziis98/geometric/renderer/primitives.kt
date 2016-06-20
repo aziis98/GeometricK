@@ -40,7 +40,7 @@ abstract class Primitive() {
     }
 }
 
-class Point(val position: Vec2d) : Primitive() {
+open class Point(var position: Vec2d = ZERO) : Primitive() {
     override fun render(renderer: Renderer, g: Graphics2D) {
         if (highlighted) {
             g.color = COLOR_PRIMITIVE_HIGHLIGHT
@@ -63,9 +63,66 @@ class Point(val position: Vec2d) : Primitive() {
     }
 }
 
+class Centroid(val points: List<Point>) : Point() {
+    init {
+        points.forEach { it.dependent += this }
+    }
+
+    override fun recompute() {
+        position = points.map { it.position }.reduce { a, b -> a + b } / points.size
+    }
+
+    override fun destroy() {
+        super.destroy()
+
+        points.forEach {
+            it.dependent -= this
+        }
+    }
+
+    override fun toString(): String {
+        return "Centroid#$nuid(${ points.joinToString(separator = ", ") { "#${it.nuid}" } })"
+    }
+}
+
+class LineIntersection(val lineA: Line, val lineB: Line) : Point() {
+    var degenerate: Boolean = false
+        get() = field
+        internal set(value) { field = value }
+
+    init {
+        lineA.dependent += this
+        lineB.dependent += this
+    }
+
+    override fun render(renderer: Renderer, g: Graphics2D) {
+        if (!degenerate)
+            super.render(renderer, g)
+    }
+
+    override fun recompute() {
+        position = solve(lineA.a, lineA.b, -lineA.c,
+                         lineB.a, lineB.b, -lineB.c)
+
+        degenerate = det(lineA.a, lineA.b,
+                         lineB.a, lineB.b) == 0.0
+    }
+
+    override fun destroy() {
+        super.destroy()
+
+        lineA.dependent -= this
+        lineB.dependent -= this
+    }
+
+    override fun toString(): String {
+        return "PointIntersection#$nuid(#${lineA.nuid}, #${lineB.nuid}, degenerate=$degenerate)"
+    }
+}
+
 open class Line(var a: Double, var b: Double, var c: Double) : Primitive() {
-    internal var p1 = Vec2i(0, 0)
-    internal var p2 = Vec2i(0, 0)
+    internal val p1 = Vec2i(0, 0)
+    internal val p2 = Vec2i(0, 0)
 
     override fun render(renderer: Renderer, g: Graphics2D) {
         if (highlighted) {
@@ -79,10 +136,10 @@ open class Line(var a: Double, var b: Double, var c: Double) : Primitive() {
 
         val ty = -renderer.camera.translateY - renderer.owner.height.toInt() / 2
 
-        val y = c / b
+        val y = -c / b
 
-        val x1 = (c - b * (ty)) / a
-        val x2 = (c - b * (ty + renderer.owner.height.toInt())) / a
+        val x1 = -(c + b * (ty)) / a
+        val x2 = -(c + b * (ty + renderer.owner.height.toInt())) / a
 
         if (a != 0.0) {
             p1.x = x1.toInt()
@@ -107,7 +164,7 @@ open class Line(var a: Double, var b: Double, var c: Double) : Primitive() {
     }
 
     override fun toString(): String {
-        return "Line#$nuid( ($a)x + ($b)y + $c = 0 )"
+        return "Line#$nuid( ($a)x + ($b)y + ($c) = 0 )"
     }
 }
 
@@ -121,7 +178,7 @@ class Line2Pt(val pointA: Point, val pointB: Point) : Line(pointB.y - pointA.y, 
     override fun recompute() {
         a = pointB.y - pointA.y
         b = pointA.x - pointB.x
-        c = pointA.x * pointB.y - pointA.y * pointB.x
+        c = pointA.y * pointB.x - pointA.x * pointB.y
     }
 
     override fun destroy() {
@@ -132,7 +189,31 @@ class Line2Pt(val pointA: Point, val pointB: Point) : Line(pointB.y - pointA.y, 
     }
 
     override fun toString(): String {
-        return "Line#$nuid(#${pointA.nuid} , #${pointB.nuid})"
+        return "Line#$nuid(#${pointA.nuid}, #${pointB.nuid})"
+    }
+}
+
+class LineParallel(val line: Line, val point: Point) : Line(line.a, line.b, -point.x * line.a - point.y * line.b) {
+    init {
+        line.dependent += this
+        point.dependent += this
+    }
+
+    override fun recompute() {
+        a = line.a
+        b = line.b
+        c = - point.x * line.a - point.y * line.b
+    }
+
+    override fun destroy() {
+        super.destroy()
+
+        line.dependent -= this
+        point.dependent -= this
+    }
+
+    override fun toString(): String {
+        return "LineParallel#$nuid(#${line.nuid} , #${point.nuid})"
     }
 }
 
@@ -145,7 +226,7 @@ class LinePerpendicular(val line: Line, val point: Point) : Line(line.b, -line.a
     override fun recompute() {
         a = line.b
         b = -line.a
-        c = point.x * line.b - point.y * line.a
+        c = point.y * line.a - point.x * line.b
     }
 
     override fun destroy() {

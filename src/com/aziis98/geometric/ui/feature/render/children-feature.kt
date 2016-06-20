@@ -8,19 +8,26 @@ import java.awt.*
 
 // Copyright 2016 Antonio De Lucreziis
 
-class RenderChildrenFeature(override val owner: Box, override var disabled: Boolean = false) : RenderFeature {
+class RenderChildrenFeature(override val owner: Box) : RenderFeature() {
     override fun render(g: Graphics2D) {
         if (disabled) return
 
         owner.children.forEach {
             g.translate(it.left.value, it.top.value)
 
-            val bufferClip = g.getClipBounds(Rectangle())
-            g.setClip(0, 0, it.width.toInt(), it.height.toInt())
+            val noRenderClip = it.featureOfType<ClipRenderFeature>() == null
 
-            it.tryRender(g)
+            if (noRenderClip) {
+                it.tryRender(g)
+            }
+            else {
+                val bufferClip = g.getClipBounds(Rectangle())
+                g.setClip(0, 0, it.width.toInt(), it.height.toInt())
 
-            g.clip = bufferClip
+                it.tryRender(g)
+
+                g.clip = bufferClip
+            }
             g.translate(-it.left.value, -it.top.value)
         }
     }

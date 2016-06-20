@@ -9,7 +9,6 @@ import com.aziis98.geometric.ui.feature.Feature
 // Copyright 2016 Antonio De Lucreziis
 
 class MouseHoverFeature(override val owner: Box,
-                        override var disabled: Boolean = false,
                         val onEnter: Box.() -> Unit,
                         val onExit:  Box.() -> Unit) : Feature {
 
@@ -33,4 +32,4 @@ class MouseHoverFeature(override val owner: Box,
     }
 }
 
-fun Box.inputHover(onEnter: Box.() -> Unit, onExit: Box.() -> Unit) = MouseHoverFeature(this, false, onEnter, onExit)
+fun Box.inputHover(onEnter: Box.() -> Unit, onExit: Box.() -> Unit) = MouseHoverFeature(this, onEnter, onExit)

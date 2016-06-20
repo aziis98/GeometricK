@@ -17,8 +17,7 @@ class RenderTextFeature(override val owner: Box,
                         var color: Color,
                         var font: Font = DEFAULT_FONT,
                         var offset: Vec2i = Vec2i(0, 0),
-                        val constraint: (Int, Int) -> Unit = { w, h -> },
-                        override var disabled: Boolean = false) : RenderFeature, ConstraintFeature {
+                        val constraint: (Int, Int) -> Unit = { w, h -> }) : RenderFeature(), ConstraintFeature {
 
     internal var bounds: Rectangle2D? = null
 

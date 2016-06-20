@@ -9,10 +9,11 @@ import com.aziis98.geometric.ui.feature.Feature
 // Copyright 2016 Antonio De Lucreziis
 
 class MouseClickFeature(override val owner: Box,
-                        val onClick: Box.()->Unit,
-                        override var disabled: Boolean = false) : Feature {
+                        val onClick: Box.()->Unit) : Feature {
     init {
         Mouse.on<MouseClick> {
+            if (owner.disabled) return@on
+
             val relPosition = owner.toRelativeCoord(Vec2i(it.x, it.y) - Vec2i(Geometric.insets.left, Geometric.insets.top))
 
             if (owner.contains(relPosition))
